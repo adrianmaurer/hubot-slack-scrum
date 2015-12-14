@@ -16,6 +16,7 @@
 //   hubot scrum start <email>
 //   next
 //   next user <reason>
+//   scrum finish
 //
 // Author:
 //   @eseceve
@@ -44,7 +45,7 @@ module.exports = function scrum(robot) {
   robot.respond(/scrum start(\s([a-zA-Z0-9+._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))?/i, start);
   robot.hear(/next/i, next);
   robot.hear(/next user(.*)/i, nextUser);
-  robot.hear(/finish scrum/i, finish)
+  robot.hear(/scrum finish/i, finish)
 
 
   function start(res) {
