@@ -44,6 +44,7 @@ module.exports = function scrum(robot) {
   robot.respond(/scrum start(\s([a-zA-Z0-9+._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))?/i, start);
   robot.hear(/next/i, next);
   robot.hear(/next user(.*)/i, nextUser);
+  robot.hear(/finish scrum/i, )
 
 
   function start(res) {
@@ -61,6 +62,17 @@ module.exports = function scrum(robot) {
     }
 
     _doQuestion(scrum);
+  }
+  
+  
+  function finish(res, force) {
+    var channel = _getChannel(res.message.room);
+    var scrum;
+    
+    if (!_scrumExists(channel)) return;
+    
+    scrum = _getScrum(channel);
+    return _finish(scrum)
   }
 
 
