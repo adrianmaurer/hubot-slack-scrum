@@ -55,7 +55,6 @@ module.exports = function scrum(robot) {
     var scrum;
 
     if (_scrumExists(channel)) return;
-    res.send("Hi <!channel>, let's start a new Scrum");
     scrum = _createScrum(channel, users);
 
     if (users) robot.brain.set(_getScrumID(channel), scrum);
