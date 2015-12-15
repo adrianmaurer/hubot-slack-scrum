@@ -241,7 +241,6 @@ module.exports = function scrum(robot) {
 
 
   function _sendEmail(scrum) {
-    if (!scrum.email) return;
     if (!env.HSS_MANDRILL_API_KEY) return;
 
     var mandrillClient = new mandrill.Mandrill(env.HSS_MANDRILL_API_KEY);
