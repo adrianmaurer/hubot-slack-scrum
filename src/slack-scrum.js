@@ -256,10 +256,7 @@ module.exports = function scrum(robot) {
         subject: "[HSS] scrum metting " + new Date().toLocaleDateString(),
         from_email: "no.replay@example.org",
         from_name: "Hubot Slack Scrum",
-        to: [{
-          email: scrum.email,
-          type: "to"
-        }]
+        to: scrum.sendTo
       },
     });
   }
