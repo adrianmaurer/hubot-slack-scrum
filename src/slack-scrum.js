@@ -13,7 +13,7 @@
 //   HSS_MANDRILL_API_KEY
 //
 // Commands:
-//   hubot scrum start <email>
+//   hubot scrum start <email> <option: users>
 //   next
 //   next user <reason>
 //   scrum finish
@@ -51,6 +51,7 @@ module.exports = function scrum(robot) {
   function start(res) {
     var channel = _getChannel(res.message.room);
     var email = res.match[2];
+    var users = res.match[3].replace(/@/g, "").split(',')
     var scrum;
 
     if (_scrumExists(channel)) return;
@@ -59,8 +60,13 @@ module.exports = function scrum(robot) {
 
     if (email) {
       scrum.email = email;
-      robot.brain.set(_getScrumID(channel), scrum);
     }
+
+    if (users) {
+      scrum.myUsers = users
+    }
+
+    robot.brain.set(_getScrumID(channel), scrum);
 
     _doQuestion(scrum);
   }
@@ -134,7 +140,7 @@ module.exports = function scrum(robot) {
       user: 0
     };
 
-    scrum.members = channel.members.map(function getUserObject(userID) {
+    scrum.members = scrum.myUsers || channel.members.map(function getUserObject(userID) {
       var user = slackAdapterClient.getUserByID(userID);
       user.reason = '';
       user.answers = [];
