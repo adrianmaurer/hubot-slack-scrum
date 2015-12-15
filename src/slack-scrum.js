@@ -55,18 +55,13 @@ module.exports = function scrum(robot) {
     var scrum;
 
     if (_scrumExists(channel)) return;
-    scrum = _getScrum(channel);
+    scrum = _createScrum(channel, users);
     res.send("Hi <!channel>, let's start a new Scrum");
 
     if (email) {
       scrum.email = email;
+      robot.brain.set(_getScrumID(channel), scrum);
     }
-
-    if (users) {
-      scrum.myUsers = users
-    }
-
-    robot.brain.set(_getScrumID(channel), scrum);
 
     _doQuestion(scrum);
   }
@@ -129,7 +124,7 @@ module.exports = function scrum(robot) {
   }
 
 
-  function _createScrum(channel) {
+  function _createScrum(channel, users) {
     var history = Object.keys(channel.getHistory()).reverse();
     var scrum = {
       answers: {},
@@ -140,7 +135,7 @@ module.exports = function scrum(robot) {
       user: 0
     };
 
-    scrum.members = scrum.myUsers || channel.members.map(function getUserObject(userID) {
+    scrum.members = users || channel.members.map(function getUserObject(userID) {
       var user = slackAdapterClient.getUserByID(userID);
       user.reason = '';
       user.answers = [];
@@ -183,13 +178,7 @@ module.exports = function scrum(robot) {
 
   function _getScrum(channel) {
     var scrum;
-
-    if (_scrumExists(channel)) return robot.brain.get(_getScrumID(channel));
-
-    scrum = _createScrum(channel);
-    robot.brain.set(_getScrumID(channel), scrum);
-
-    return scrum;
+    return robot.brain.get(_getScrumID(channel));
   }
 
 
