@@ -193,7 +193,6 @@ module.exports = function scrum(robot) {
     return 'HSS-'+channel.id;
   }
 
-
   function _saveAnswer(scrum) {
     var firstMessage = true;
     var history = scrum.channel.getHistory();
@@ -234,3 +233,35 @@ module.exports = function scrum(robot) {
     scrum.lastMessageTS = lastMessageTS;
     scrum.members[scrum.user] = user;
     robot.brain.set(_getScrumID(scrum.channel), scrum);
+  }
+
+
+  function _scrumExists(channel) {
+    return !!robot.brain.get(_getScrumID(channel));
+  }
+
+
+  function _sendEmail(scrum) {
+    if (!scrum.email) return;
+    if (!env.HSS_MANDRILL_API_KEY) return;
+
+    var mandrillClient = new mandrill.Mandrill(env.HSS_MANDRILL_API_KEY);
+    var html = jade.compileFile(__dirname + '/email.jade')({
+      questions: QUESTIONS,
+      members: scrum.members
+    });
+
+    mandrillClient.messages.send({
+      message: {
+        html: html,
+        subject: "[HSS] scrum metting " + new Date().toLocaleDateString(),
+        from_email: "no.replay@example.org",
+        from_name: "Hubot Slack Scrum",
+        to: [{
+          email: scrum.email,
+          type: "to"
+        }]
+      },
+    });
+  }
+};
