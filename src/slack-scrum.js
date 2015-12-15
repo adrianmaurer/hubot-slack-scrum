@@ -13,7 +13,7 @@
 //   HSS_MANDRILL_API_KEY
 //
 // Commands:
-//   hubot scrum start <email> <option: users>
+//   hubot scrum start <:users>
 //   next
 //   next user <reason>
 //   scrum finish
@@ -42,7 +42,8 @@ module.exports = function scrum(robot) {
   var slackAdapterClient = robot.adapter.client;
 
 
-  robot.respond(/scrum start(\s([a-zA-Z0-9+._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))?/i, start);
+  //robot.respond(/scrum start(\s([a-zA-Z0-9+._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))?/i, start);
+  robot.respond(/scrum start (.*)/i , start);
   robot.hear(/next/i, next);
   robot.hear(/next user(.*)/i, nextUser);
   robot.hear(/scrum finish/i, finish)
@@ -50,29 +51,25 @@ module.exports = function scrum(robot) {
 
   function start(res) {
     var channel = _getChannel(res.message.room);
-    var email = res.match[2];
-    var users = res.match[3] ? res.match[3].replace(/@/g, "").split(',') : undefined
+    var users = res.match[1] ? res.match[1].replace(/@/g, "").split(' ') : undefined
     var scrum;
 
     if (_scrumExists(channel)) return;
-    scrum = _createScrum(channel, users);
     res.send("Hi <!channel>, let's start a new Scrum");
+    scrum = _createScrum(channel, users);
 
-    if (email) {
-      scrum.email = email;
-      robot.brain.set(_getScrumID(channel), scrum);
-    }
+    if (users) robot.brain.set(_getScrumID(channel), scrum);
 
     _doQuestion(scrum);
   }
-  
-  
+
+
   function finish(res, force) {
     var channel = _getChannel(res.message.room);
     var scrum;
-    
+
     if (!_scrumExists(channel)) return;
-    
+
     scrum = _getScrum(channel);
     return _finish(scrum)
   }
@@ -132,13 +129,23 @@ module.exports = function scrum(robot) {
       lastMessageTS: history[0],
       question: 0,
       reasons: {},
-      user: 0
+      user: 0,
+      sendTo: []
     };
-
-    scrum.members = users || channel.members.map(function getUserObject(userID) {
-      var user = slackAdapterClient.getUserByID(userID);
+    var members = users || channel.members
+    scrum.members = members.map(function getUserObject(u) {
+      var user;
+      if (users) {
+        user = slackAdapterClient.getUserByName(u);
+      } else {
+        user = slackAdapterClient.getUserByID(u);
+      }
       user.reason = '';
       user.answers = [];
+      scrum.sendTo.push({
+        email: user.profile.email,
+        type: "to"
+      });
       return user;
     }).filter(function filterBots(user) {
       return !user.is_bot;
@@ -227,35 +234,3 @@ module.exports = function scrum(robot) {
     scrum.lastMessageTS = lastMessageTS;
     scrum.members[scrum.user] = user;
     robot.brain.set(_getScrumID(scrum.channel), scrum);
-  }
-
-
-  function _scrumExists(channel) {
-    return !!robot.brain.get(_getScrumID(channel));
-  }
-
-
-  function _sendEmail(scrum) {
-    if (!scrum.email) return;
-    if (!env.HSS_MANDRILL_API_KEY) return;
-
-    var mandrillClient = new mandrill.Mandrill(env.HSS_MANDRILL_API_KEY);
-    var html = jade.compileFile(__dirname + '/email.jade')({
-      questions: QUESTIONS,
-      members: scrum.members
-    });
-
-    mandrillClient.messages.send({
-      message: {
-        html: html,
-        subject: "[HSS] scrum metting " + new Date().toLocaleDateString(),
-        from_email: "no.replay@example.org",
-        from_name: "Hubot Slack Scrum",
-        to: [{
-          email: scrum.email,
-          type: "to"
-        }]
-      },
-    });
-  }
-};
