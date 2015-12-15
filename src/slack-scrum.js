@@ -51,7 +51,7 @@ module.exports = function scrum(robot) {
   function start(res) {
     var channel = _getChannel(res.message.room);
     var email = res.match[2];
-    var users = res.match[3].replace(/@/g, "").split(',')
+    var users = res.match[3] ? res.match[3].replace(/@/g, "").split(',') : undefined
     var scrum;
 
     if (_scrumExists(channel)) return;
